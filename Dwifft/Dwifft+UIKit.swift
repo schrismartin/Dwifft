@@ -9,6 +9,10 @@
 #if os(iOS)
 
 import UIKit
+    
+public protocol TableViewDiffCalculatorDelegate: class {
+    func didFinishHandlingDiffs(_ calculator: TableViewDiffCalculator) -> Void
+}
 
 open class TableViewDiffCalculator<T: Equatable> {
     
@@ -18,6 +22,8 @@ open class TableViewDiffCalculator<T: Equatable> {
         self.tableView = tableView
         self._rows = initialRows
     }
+    
+    public weak var delegate: TableViewDiffCalculatorDelegate?
     
     /// Right now this only works on a single section of a tableView. If your tableView has multiple sections, though, you can just use multiple TableViewDiffCalculators, one per section, and set this value appropriately on each one.
     open var sectionIndex: Int = 0
@@ -36,14 +42,22 @@ open class TableViewDiffCalculator<T: Equatable> {
             let newRows = newValue
             let diff = oldRows.diff(newRows)
             if (diff.results.count > 0) {
+                CATransaction.begin()
                 tableView?.beginUpdates()
+                CATransaction.setCompletionBlock({
+                    self.delegate.didFinishHandlingDiffs(self)
+                })
+                
                 self._rows = newValue
                 let insertionIndexPaths = diff.insertions.map({ IndexPath(row: $0.idx, section: self.sectionIndex) })
                 let deletionIndexPaths = diff.deletions.map({ IndexPath(row: $0.idx, section: self.sectionIndex) })
-
+                
                 tableView?.insertRows(at: insertionIndexPaths, with: insertionAnimation)
                 tableView?.deleteRows(at: deletionIndexPaths, with: deletionAnimation)
                 tableView?.endUpdates()
+                CATransaction.commit()
+            } else {
+                delegate.didFinishHandlingDiffs(self)
             }
         }
     }
