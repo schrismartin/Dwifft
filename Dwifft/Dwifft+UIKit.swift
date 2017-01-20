@@ -10,8 +10,8 @@
 
 import UIKit
     
-public protocol TableViewDiffCalculatorDelegate: class {
-    func didFinishHandlingDiffs(_ calculator: TableViewDiffCalculator) -> Void
+public protocol TableViewDiffCalculatorDelegate: class, Equatable {
+    func didFinishHandlingDiffs(_ tableView: UITableView) -> Void
 }
 
 open class TableViewDiffCalculator<T: Equatable> {
