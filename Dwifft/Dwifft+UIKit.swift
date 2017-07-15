@@ -10,8 +10,8 @@
 
 import UIKit
     
-public protocol TableViewDiffCalculatorDelegate: class, Equatable {
-    func didFinishHandlingDiffs(_ tableView: UITableView) -> Void
+public protocol TableViewDiffCalculatorDelegate: class {
+    func calculator<Element>(_ calculator: TableViewDiffCalculator<Element>, didFinishHandlingDiffsFor tableView: UITableView)
 }
 
 open class TableViewDiffCalculator<T: Equatable> {
@@ -45,7 +45,9 @@ open class TableViewDiffCalculator<T: Equatable> {
                 CATransaction.begin()
                 tableView?.beginUpdates()
                 CATransaction.setCompletionBlock({
-                    self.delegate.didFinishHandlingDiffs(self)
+                    guard let tableView = self.tableView else { return }
+                    
+                    self.delegate?.calculator(self, didFinishHandlingDiffsFor: tableView)
                 })
                 
                 self._rows = newValue
@@ -57,11 +59,12 @@ open class TableViewDiffCalculator<T: Equatable> {
                 tableView?.endUpdates()
                 CATransaction.commit()
             } else {
-                delegate.didFinishHandlingDiffs(self)
+                guard let tableView = tableView else { return }
+                
+                delegate?.calculator(self, didFinishHandlingDiffsFor: tableView)
             }
         }
     }
-    
 }
     
 open class CollectionViewDiffCalculator<T: Equatable> {
